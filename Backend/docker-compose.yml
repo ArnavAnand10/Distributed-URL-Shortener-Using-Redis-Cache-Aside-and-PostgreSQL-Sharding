@@ -1,0 +1,107 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  postgres-shard-0:
+    image: postgres:16
+    container_name: postgres-shard-0
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_shard_0_data:/var/lib/postgresql/data
+
+  postgres-shard-1:
+    image: postgres:16
+    container_name: postgres-shard-1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_shard_1_data:/var/lib/postgresql/data
+
+  postgres-shard-2:
+    image: postgres:16
+    container_name: postgres-shard-2
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - pg_shard_2_data:/var/lib/postgresql/data
+
+  creation-a:
+    image: creation-service:latest
+    build:
+      context: ./services/creation-service
+      dockerfile: Dockerfile
+    container_name: creation-a
+    environment:
+      MACHINE_ID: a
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      SHARD_0_DSN: postgresql://postgres:pass@postgres-shard-0:5432/postgres
+      SHARD_1_DSN: postgresql://postgres:pass@postgres-shard-1:5432/postgres
+      SHARD_2_DSN: postgresql://postgres:pass@postgres-shard-2:5432/postgres
+    depends_on:
+      - redis
+      - postgres-shard-0
+      - postgres-shard-1
+      - postgres-shard-2
+    ports:
+      - "8001:8000"
+
+  creation-b:
+    image: creation-service:latest
+    container_name: creation-b
+    environment:
+      MACHINE_ID: b
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      SHARD_0_DSN: postgresql://postgres:pass@postgres-shard-0:5432/postgres
+      SHARD_1_DSN: postgresql://postgres:pass@postgres-shard-1:5432/postgres
+      SHARD_2_DSN: postgresql://postgres:pass@postgres-shard-2:5432/postgres
+    depends_on:
+      - redis
+      - postgres-shard-0
+      - postgres-shard-1
+      - postgres-shard-2
+    ports:
+      - "8002:8000"
+
+  creation-c:
+    image: creation-service:latest
+    container_name: creation-c
+    environment:
+      MACHINE_ID: c
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      SHARD_0_DSN: postgresql://postgres:pass@postgres-shard-0:5432/postgres
+      SHARD_1_DSN: postgresql://postgres:pass@postgres-shard-1:5432/postgres
+      SHARD_2_DSN: postgresql://postgres:pass@postgres-shard-2:5432/postgres
+    depends_on:
+      - redis
+      - postgres-shard-0
+      - postgres-shard-1
+      - postgres-shard-2
+    ports:
+      - "8003:8000"
+
+volumes:
+  pg_shard_0_data:
+  pg_shard_1_data:
+  pg_shard_2_data:
