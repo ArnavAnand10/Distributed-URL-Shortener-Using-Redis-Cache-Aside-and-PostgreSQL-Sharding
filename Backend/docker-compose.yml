@@ -101,6 +101,26 @@ services:
     ports:
       - "8003:8000"
 
+  redirect:
+    build:
+      context: ./services/redirect-service
+      dockerfile: Dockerfile
+    container_name: redirect
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      SHARD_0_DSN: postgresql://postgres:pass@postgres-shard-0:5432/postgres
+      SHARD_1_DSN: postgresql://postgres:pass@postgres-shard-1:5432/postgres
+      SHARD_2_DSN: postgresql://postgres:pass@postgres-shard-2:5432/postgres
+    depends_on:
+      - redis
+      - postgres-shard-0
+      - postgres-shard-1
+      - postgres-shard-2
+    ports:
+      - "8004:8000"
+
 volumes:
   pg_shard_0_data:
   pg_shard_1_data:
