@@ -1,4 +1,4 @@
-# URL Shortener - Backend System Design
+# Distributed URL Shortening Platform with Deterministic Sharding and Cache-Accelerated Redirect Resolution
 
 ## 1. Problem Statement
 This system generates short URLs and resolves them at low latency under concurrent traffic.
