@@ -1,39 +1,41 @@
 import { useMemo, useState } from 'react'
-import type { FormEvent } from 'react'
 import './App.css'
 
-type CreateResponse = {
-  short_url: string
-  original_url: string
-}
+/**
+ * @typedef {Object} CreateResponse
+ * @property {string} short_url
+ * @property {string} original_url
+ */
 
-type ResolveResponse = {
-  short_code: string
-  original_url: string
-  source: 'cache' | 'db'
-  server_latency_ms: number
-}
+/**
+ * @typedef {Object} ResolveResponse
+ * @property {string} short_code
+ * @property {string} original_url
+ * @property {'cache' | 'db'} source
+ * @property {number} server_latency_ms
+ */
 
-type LookupEntry = {
-  id: number
-  short_code: string
-  original_url: string
-  source: 'cache' | 'db'
-  server_latency_ms: number
-  round_trip_ms: number
-}
+/**
+ * @typedef {Object} LookupEntry
+ * @property {number} id
+ * @property {string} short_code
+ * @property {string} original_url
+ * @property {'cache' | 'db'} source
+ * @property {number} server_latency_ms
+ * @property {number} round_trip_ms
+ */
 
 function App() {
   const [url, setUrl] = useState('https://')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [result, setResult] = useState<CreateResponse | null>(null)
+  const [result, setResult] = useState(null)
   const [copied, setCopied] = useState(false)
 
   const [lookupCode, setLookupCode] = useState('')
   const [lookupLoading, setLookupLoading] = useState(false)
   const [lookupError, setLookupError] = useState('')
-  const [lookupHistory, setLookupHistory] = useState<LookupEntry[]>([])
+  const [lookupHistory, setLookupHistory] = useState([])
   const [nextId, setNextId] = useState(1)
 
   const apiBase = useMemo(
@@ -43,7 +45,7 @@ function App() {
 
   const shortLink = result ? `${apiBase}/${result.short_url}` : ''
 
-  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event) => {
     event.preventDefault()
     setLoading(true)
     setError('')
@@ -59,7 +61,7 @@ function App() {
       if (!response.ok) {
         throw new Error(typeof data?.detail === 'string' ? data.detail : 'Request failed')
       }
-      setResult(data as CreateResponse)
+      setResult(data)
       setUrl('https://')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
@@ -79,7 +81,7 @@ function App() {
     }
   }
 
-  const onLookup = async (event: FormEvent<HTMLFormElement>) => {
+  const onLookup = async (event) => {
     event.preventDefault()
     setLookupLoading(true)
     setLookupError('')
@@ -93,7 +95,7 @@ function App() {
       if (!response.ok) {
         throw new Error(typeof data?.detail === 'string' ? data.detail : 'Not found')
       }
-      const res = data as ResolveResponse
+      const res = data
       setLookupHistory((prev) => [
         {
           id: nextId,

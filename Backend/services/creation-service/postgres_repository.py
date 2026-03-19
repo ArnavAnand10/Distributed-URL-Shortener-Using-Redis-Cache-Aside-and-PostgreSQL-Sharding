@@ -1,4 +1,5 @@
 from typing import Optional
+from pathlib import Path
 
 import psycopg
 from psycopg.errors import Error as PsycopgError
@@ -29,6 +30,43 @@ def _get_connection() -> psycopg.Connection:
         return psycopg.connect(dsn, connect_timeout=3)
     except PsycopgError as exc:
         raise DatabaseUnavailableError("PostgreSQL connection failed") from exc
+
+
+def _get_connection_to_shard(dsn: str) -> psycopg.Connection:
+    """Get connection to a specific shard by DSN."""
+    try:
+        return psycopg.connect(dsn, connect_timeout=3)
+    except PsycopgError as exc:
+        raise DatabaseUnavailableError("PostgreSQL connection failed") from exc
+
+
+def apply_schema_to_all_shards() -> None:
+    """Apply the schema to all PostgreSQL shards."""
+    schema_path = Path(__file__).parent / "schema.sql"
+    schema_sql = schema_path.read_text()
+
+    shards = [
+        ("SHARD_0", config.SHARD_0_DSN),
+        ("SHARD_1", config.SHARD_1_DSN),
+        ("SHARD_2", config.SHARD_2_DSN),
+    ]
+
+    for shard_name, dsn in shards:
+        if not dsn:
+            print(f"{shard_name}: DSN not configured, skipping")
+            continue
+
+        try:
+            with _get_connection_to_shard(dsn) as conn:
+                with conn.cursor() as cur:
+                    cur.execute(schema_sql)
+            print(f"{shard_name}: schema applied successfully")
+        except DatabaseUnavailableError as exc:
+            print(f"{shard_name}: connection failed -> {exc}")
+        except PsycopgError as exc:
+            print(f"{shard_name}: schema application failed -> {exc}")
+        except Exception as exc:
+            print(f"{shard_name}: unexpected error -> {exc}")
 
 
 def save_mapping(short_code: str, original_url: str) -> None:

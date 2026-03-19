@@ -2,6 +2,9 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redis
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
 
   postgres-shard-0:
     image: postgres:16
@@ -122,3 +125,4 @@ volumes:
   pg_shard_0_data:
   pg_shard_1_data:
   pg_shard_2_data:
+  redis_data:

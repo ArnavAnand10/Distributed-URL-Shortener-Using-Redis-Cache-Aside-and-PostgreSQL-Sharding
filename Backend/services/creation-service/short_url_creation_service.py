@@ -34,10 +34,6 @@ def create_short_url_mapping(original_url: str) -> tuple[str, str]:
     except ValueError as exc:
         raise CreationError(str(exc)) from exc
 
-    # Cache write is best effort because PostgreSQL is the source of truth.
-    try:
-        config.redis_client.set(f"url:{short_url}", original_url)
-    except (RedisError, Exception):
-        pass
+    
 
     return short_url, original_url
